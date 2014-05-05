@@ -1,4 +1,4 @@
-/*
+cordova.define("org.apache.cordova.media.Media", function(require, exports, module) { /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -37,7 +37,7 @@ var mediaObjects = {};
  * @param statusCallback        The callback to be called when media status has changed.
  *                                  statusCallback(int statusCode) - OPTIONAL
  */
-var Media = function(src, successCallback, errorCallback, statusCallback) {
+var Media = function(src, successCallback, errorCallback, statusCallback, remoteControlData) {
     argscheck.checkArgs('SFFF', 'Media', arguments);
     this.id = utils.createUUID();
     mediaObjects[this.id] = this;
@@ -45,6 +45,7 @@ var Media = function(src, successCallback, errorCallback, statusCallback) {
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
     this.statusCallback = statusCallback;
+    this.remoteControlData = remoteControlData;
     this._duration = -1;
     this._position = -1;
     exec(null, this.errorCallback, "Media", "create", [this.id, this.src]);
@@ -74,6 +75,13 @@ Media.get = function(id) {
  */
 Media.prototype.play = function(options) {
     exec(null, null, "Media", "startPlayingAudio", [this.id, this.src, options]);
+};
+
+/**
+ * Prepare the ios info center for receiving new events
+ */
+Media.prototype.setupInfoCenter = function(options) {
+    exec(null, null, "Media", "setupInfoCenter", [this.id, this.src, options]);
 };
 
 /**
@@ -152,6 +160,7 @@ Media.prototype.setVolume = function(volume) {
     exec(null, null, "Media", "setVolume", [this.id, volume]);
 };
 
+
 /**
  * Audio has status update.
  * PRIVATE
@@ -193,3 +202,5 @@ Media.onStatus = function(id, msgType, value) {
 };
 
 module.exports = Media;
+
+});

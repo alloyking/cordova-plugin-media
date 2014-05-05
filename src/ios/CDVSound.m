@@ -21,6 +21,7 @@
 #import "CDVFile.h"
 #import <Cordova/NSArray+Comparisons.h>
 #import <Cordova/CDVJSON.h>
+#import <objc/runtime.h>
 
 #define DOCUMENTS_SCHEME_PREFIX @"documents://"
 #define HTTP_SCHEME_PREFIX @"http://"
@@ -297,6 +298,42 @@
     // don't care for any callbacks
 }
 
+-(void)setupInfoCenter:(CDVInvokedUrlCommand*)command
+{
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+}
+
+- (void)setInfoCenterInfo:(NSDictionary*) songdata AndDuration:(float) duration
+{
+
+    NSError *setInfoCenterInfoError;
+    [avSession setCategory:AVAudioSessionCategoryPlayback error:nil];
+    [avSession setActive:YES error:&setInfoCenterInfoError];
+    
+    if (setInfoCenterInfoError)
+    {
+        NSLog(@"Error while setting infocenter data: %@", setInfoCenterInfoError);
+    }
+    else
+    {
+        NSString *artist = [songdata objectForKey:@"artist"];
+        NSString *trackname = [songdata objectForKey:@"trackname"];
+        
+        //construct a new dictionary with this data
+        NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
+        
+        if (songInfo)
+        {
+            [songInfo setObject:trackname forKey:MPMediaItemPropertyTitle];
+            [songInfo setObject:artist forKey:MPMediaItemPropertyArtist];
+            [songInfo setObject:[NSNumber numberWithFloat:duration] forKey:MPMediaItemPropertyPlaybackDuration];
+            [songInfo setObject:[NSNumber numberWithFloat:0.0] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
+            [songInfo setObject:[NSNumber numberWithFloat:1.0] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+            [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
+        }
+    }
+}
+
 - (void)startPlayingAudio:(CDVInvokedUrlCommand*)command
 {
     NSString* callbackId = command.callbackId;
@@ -305,7 +342,7 @@
     NSString* mediaId = [command.arguments objectAtIndex:0];
     NSString* resourcePath = [command.arguments objectAtIndex:1];
     NSDictionary* options = [command.arguments objectAtIndex:2 withDefault:nil];
-
+    
     BOOL bError = NO;
     NSString* jsString = nil;
 
@@ -348,7 +385,10 @@
                 if (audioFile.volume != nil) {
                     audioFile.player.volume = [audioFile.volume floatValue];
                 }
-
+                if ([options objectForKey:@"songdata"] != NULL)
+                {
+                    [self setInfoCenterInfo:[options objectForKey:@"songdata"] AndDuration:audioFile.player.duration];
+                }
                 [audioFile.player play];
                 double position = round(audioFile.player.duration * 1000) / 1000;
                 jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%.3f);\n%@(\"%@\",%d,%d);", @"cordova.require('org.apache.cordova.media.Media').onStatus", mediaId, MEDIA_DURATION, position, @"cordova.require('org.apache.cordova.media.Media').onStatus", mediaId, MEDIA_STATE, MEDIA_RUNNING];
@@ -721,6 +761,7 @@
 
     [[self soundCache] removeAllObjects];
 }
+
 
 @end
 

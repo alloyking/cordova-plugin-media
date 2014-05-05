@@ -20,6 +20,7 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioServices.h>
 #import <AVFoundation/AVFoundation.h>
+#import <MediaPlayer/MediaPlayer.h>
 
 #import <Cordova/CDVPlugin.h>
 
@@ -94,7 +95,7 @@ typedef NSUInteger CDVMediaMsg;
 - (void)seekToAudio:(CDVInvokedUrlCommand*)command;
 - (void)release:(CDVInvokedUrlCommand*)command;
 - (void)getCurrentPositionAudio:(CDVInvokedUrlCommand*)command;
-
+- (void)setupInfoCenter:(CDVInvokedUrlCommand*)command;
 - (BOOL)hasAudioSession;
 
 // helper methods
